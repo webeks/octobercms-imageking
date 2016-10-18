@@ -1,0 +1,6 @@
+plugin:
+    name: 'code200.imageking::lang.plugin.name'
+    description: 'code200.imageking::lang.plugin.description'
+    author: 'Miha Trtnik'
+    icon: oc-icon-cubes
+    homepage: ''
