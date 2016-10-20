@@ -1,0 +1,346 @@
+# ===================================
+#  Form Field Definitions
+# ===================================
+
+
+tabs:
+    fields:
+        # GENERAL SETTINGS
+        main_class:
+            label: code200.imageking::lang.settings.main_class_label
+            comment: code200.imageking::lang.settings.main_class_comment
+            default: blog-post
+            type: text
+            tab: General
+        exclude_class:
+            tab: General
+            label: Exclude class
+            comment: CSS class of the images you dont want to process
+            type: text
+            default: noProcess
+        allowed_extensions:
+            tab: General
+            label: Allowed extensions
+            comment: Divided by comma
+            default: jpg,jpeg,gif,png
+            type: text
+        enable_private_paths:
+            tab: General
+            type: switch
+            label: Enable private paths
+            comment: All images will be put outside of default upload folder in order to protect source files. You need to add protection route in your nginx or apache configuration manually.
+            default: 0
+
+
+        # IMAGE RESIZE
+        max_width:
+            tab: Image resize
+            type: number
+            default: 0
+            label: Max image width (in px)
+            comment: Set to 0 to disable. Otherwise all images will be resized down to this width.
+
+        section_responsive:
+            tab: Image resize
+            type: section
+            label: Responsive images
+        strings:
+            tab: Image resize
+            type: switch
+            label: Enable responsive images
+            default: 1
+
+        resize_dimensions:
+            tab: Image resize
+            label: Typical dimensions
+            comment: Typical dimensions for image resize (src-set)
+            default: "300,600,1200,2400"
+            type: text
+
+
+
+        #IMAGE WATERMARK
+        enable_watermark:
+            tab: Watermark
+            type: switch
+            label: Enable watermarking
+            comment: Should we watermark our images?
+            default: 0
+        section_main_watermark:
+            tab: Watermark
+            type: section
+            label: Main watermark settings
+        watermark_img:
+            tab: Watermark
+            label: Main watermark image
+            comment: use png image with transparency here
+            type: fileupload
+            fileTypes: png
+            mode: image
+        watermark_size:
+            tab: Watermark
+            type: number
+            default: 30
+            label: Watermark size in %
+            comment: Watermark size based on original image size (but we wont scale watermark up)
+        watermark_position_x:
+            tab: Watermark
+            type: number
+            default: 10
+            label: Position X
+            comment: Position on X axis in % (use negative to go from right)
+        watermark_position_y:
+            tab: Watermark
+            type: number
+            default: 10
+            label: Position Y
+            comment: Position on Y axis in % (use negative to go from bottom)
+
+
+        section_small_watermark:
+            tab: Watermark
+            type: section
+            label: Small image watermark
+        watermark_small_limit:
+            tab: Watermark
+            type: number
+            default: 400
+            label: Width of small images
+            comment: At what size (in px) should we consider image small?
+        watermark_img_small:
+            tab: Watermark
+            label: Main watermark image
+            comment: use png image with transparency here
+            type: fileupload
+            fileTypes: png
+            mode: image
+        watermark_size_small:
+            tab: Watermark
+            type: number
+            default: 30
+            label: Watermark size in %
+            comment: Watermark size based on original image size (but we wont scale watermark up)
+        watermark_position_x_small:
+            tab: Watermark
+            type: number
+            default: 10
+            label: Position X
+            comment: Position on X axis in % (use negative to go from right)
+        watermark_position_y_small:
+            tab: Watermark
+            type: number
+            default: 10
+            label: Position Y
+            comment: Position on Y axis in % (use negative to go from top)
+        nowatermark_limit:
+            tab: Watermark
+            type: number
+            default: 100
+            label: Limit of no watermark
+            comment: If image is smaller than this (in px) we wont apply watermark (0 to disable)
+
+
+
+
+
+
+
+        #IMAGE CAPTION
+
+#
+#secondaryTabs:
+#    stretch: true
+#    fields:
+#        strings:
+#            tab: rainlab.builder::lang.localization.strings
+#            stretch: true
+#            type: switch
+#
+#        strinsdfgs:
+#            tab: s.builder::lang.localization.strings
+#            stretch: true
+#            type: switch
+#
+
+
+#fields:
+#    message:
+#        label: Message
+#        type: text
+#        default: This website uses cookies to ensure you get the best experience on our website
+#        comment: The message shown by the plugin.
+#
+#    dismiss:
+#        label: Dismiss Text
+#        type: text
+#        default: Got it
+#        comment: The text used on the dismiss button.
+#        span: auto
+#
+#    allow:
+#        label: Allow Text
+#        type: text
+#        default: Allow
+#        comment: The text used on the allow cookies button.
+#        span: auto
+#
+#    deny:
+#        label: Deny Text
+#        type: text
+#        default: Decline!
+#        comment: The text used on the decline cookies button.
+#        span: auto
+#
+#    link:
+#        label: Learn More Link Text
+#        type: text
+#        default: More info
+#        comment: The text shown on the link to the cookie policy (requires the link option to also be set)
+#        span: auto
+#
+#    href:
+#        label: Link
+#        type: text
+#        comment: The url of your cookie policy. If not set, the link is hidden.
+#
+#    section_template:
+#        type: section
+#        label: Template
+#
+#    container:
+#        label: CSS-selector for container
+#        type: text
+#        comment: The element you want the Cookie Consent notification to be appended to. If not set, the Cookie Consent plugin is appended to the body.
+#
+#    theme:
+#        label: Theme
+#        type: dropdown
+#        options:
+#            block: block
+#            edgeless: edgeless
+#            classic: classic
+#        default: block
+#        comment: Cookie Consent is themed, so users can create their own themes. The chosen theme is added to the popup container as a CSS class in the form of .cc-style-THEME_NAME
+#
+#    palette:
+#        label: Pallete
+#        type: textarea
+#        default:  |
+#                  popup:{"background":"#edeff5","text":"#838391"},
+#                  button:{"background":"#4b81e8","text":"#edeff5"},
+#                  highlight: {background: '#ffffff', border: '#ffffff', text: '#838391'}
+#        comment: This is the HTML for the elements above. Any word surrounded by ‘{{‘ and ‘}}’ will be automatically replaced. The string {{header}} will be replaced with the equivalent text above. You can remove “{{header}}” and write the content directly inside the HTML if you want.
+#        size: small
+#
+#    elements:
+#        label: Elements template
+#        type: textarea
+#        default:  |
+#                    header: '<span class="cc-header">{{header}}</span>&nbsp;',
+#                    message: '<span id="cookieconsent:desc" class="cc-message">{{message}}</span>',
+#                    messagelink: '<span id="cookieconsent:desc" class="cc-message">{{message}} <a aria-label="learn more about cookies" tabindex="0" class="cc-link" href="{{href}}" target="_blank">{{link}}</a></span>',
+#                    dismiss: '<a aria-label="dismiss cookie message" tabindex="0" class="cc-btn cc-dismiss">{{dismiss}}</a>',
+#                    allow: '<a aria-label="allow cookies" tabindex="0" class="cc-btn cc-allow">{{allow}}</a>',
+#                    deny: '<a aria-label="deny cookies" tabindex="0" class="cc-btn cc-deny">{{deny}}</a>',
+#                    link: '<a aria-label="learn more about cookies" tabindex="0" class="cc-link" href="{{href}}" target="_blank">{{link}}</a>',
+#                    close: '<span aria-label="dismiss cookie message" tabindex="0" class="cc-close">{{close}}</span>'
+#        comment: This is the HTML for the elements above. Any word surrounded by ‘{{‘ and ‘}}’ will be automatically replaced. The string {{header}} will be replaced with the equivalent text above. You can remove “{{header}}” and write the content directly inside the HTML if you want.
+#        size: large
+#
+#    position:
+#        label: Position
+#        comment: Position is used to describe where on the screen your popup should display. We also use ‘position’ to assume the shape of your popup.
+#        type: dropdown
+#        options:
+#            top: top (banner)
+#            bottom: bottom (banner)
+#            top-left: top left (float)
+#            top-right: top right (float)
+#            bottom-left: bottom left (float)
+#            bottom-right: bottom right (float)
+#        default: bottom
+#
+#    compliance:
+#        label: Complience template
+#        type: textarea
+#        default:  |
+#                  'info': '<div class="cc-compliance">{{dismiss}}</div>',
+#                  'opt-in': '<div class="cc-compliance cc-highlight">{{dismiss}}{{allow}}</div>',
+#                  'opt-out': '<div class="cc-compliance cc-highlight">{{deny}}{{dismiss}}</div>',
+#        comment: If you want an ‘opt-in’ level of compliance, then you have two buttons where the default choice is ‘cookies are disable by default’. There are other levels of compliance too. The ones we have by default are stored in the ‘compliance’ option. You can see that the only difference between the compliance levels are the buttons which are used, and how cookies are handled by default
+#        size: small
+#
+#    section_behaviour:
+#      type: section
+#      label: Behaviour settings
+#
+#    type:
+#      label: Complience type
+#      comment: The compliance type, which refers to the compliance above. Please note the **standard cookie consent popup is purely informational**.
+#      type: dropdown
+#      options:
+#          info: info
+#          opt-in: opt-in
+#          opt-out: opt-out
+#      default: info
+#
+#    revokable:
+#        type: switch
+#        label: Revokable
+#        default: false
+#        comment: If set true, revoke button is displayed every time. If false, revoke button is only displayed for advanced compliance options (opt-in and opt-out) and in countries that require revokable consent. The latter can be disabled by regionalLaw below.
+#
+#    revokeBtn:
+#        label: Revoke button template
+#        type: textarea
+#        default:  <div class="cc-revoke {{classes}}">Cookie Policy</div>
+#        comment: This is the html for the revoke button. This only shows up after the user has selected their level of consent.
+#        size: small
+#
+#    static:
+#        label: Static
+#        type: switch
+#        default: false
+#        comment: The popup uses position fixed to stay in one place on the screen despite any scroll bars. This option makes the popup position static so it displays at the top of the page. A height animation has also been added by default so the popup doesn’t make the page jump, but gradually grows and fades in.
+#
+#    dismissOnScroll:
+#        label: Dismiss on scroll
+#        type: number
+#        default: 0
+#        comment: Set value greater than 0 as scroll range to enable.
+#        span: auto
+#
+#    dismissOnTimeout:
+#        label: Dissmiss on timeout
+#        type: number
+#        default: 0
+#        comment: Set value as time in milliseconds to autodismiss after set time.
+#        span: auto
+#
+#    section_cookies:
+#      type: section
+#      label: Cookie settings
+#
+#    cookie_path:
+#        label: Path
+#        type: text
+#        default: /
+#        comment: The path for the consent cookie that Cookie Consent uses, to remember that users have consented to cookies. Use to limit consent to a specific path within your website.
+#
+#    cookie_name:
+#        label: Cookie name
+#        type: text
+#        default: cookieconsent_status
+#        comment: Name of the cookie that keeps track of users choice
+#
+#    cookie_domain:
+#        label: Cookie domain
+#        type: text
+#        default:
+#        comment: You will probably want to leave this empty. The domain that the cookie ‘name’ belongs to. The cookie can only be read on this domain. Guide to cookie domains
+#
+#    cookie_expiryDays:
+#        label: Expiry Days
+#        type: number
+#        default: 365
+#        comment: The number of days Cookie Consent should store the user’s consent information for.
