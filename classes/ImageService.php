@@ -4,6 +4,7 @@ namespace Code200\ImageKing\Classes;
 
 
 use Code200\ImageKing\Classe\Resize\ImageResizer;
+use Code200\ImageKing\Classes\Exceptions\ExtensionNotAllowedException;
 use Code200\ImageKing\Classes\Resize\MaxWidthService;
 use Code200\Imageking\models\Settings;
 use Illuminate\Support\Facades\Log;
@@ -20,6 +21,19 @@ class ImageService
     private      $dom;
 
     private $imgPath;
+
+    /**
+     * @var Settings
+     */
+    private $s;
+
+
+    /**
+     * Allowed image extensions
+     * @var array
+     */
+    private $allowedExtensions;
+
     /**
      * @param $html
      */
@@ -27,6 +41,7 @@ class ImageService
     {
         $this->html           = $html;
         $this->dom = new DomImageFinder($this->html);
+        $this->s = Settings::instance();
     }
 
 
@@ -41,17 +56,14 @@ class ImageService
         $imageNodes = $this->dom->getImageNodes();
         foreach ($imageNodes as $node) {
             try {
-                //resize
-//                $nodeToResize = (new MaxWidthService($node))->process();
+
                 $this->imagePath = rawurldecode($this->dom->getSrcAttribute($node));
-
-
-
                 $image = new ImageManipulator($this->imagePath);
+                $this->checkIfProcessable($image);
 
-                $maxWidth = Settings::get("max_width");
-                $privatePaths = Settings::get("enable_private_paths");
 
+
+                $maxWidth = $this->s->get("max_width");
                 if(!empty($maxWidth)) {
                     $image->resize($maxWidth, null);
                 }
@@ -60,9 +72,15 @@ class ImageService
                     $image->applyWatermark();
                 }
 
-                $path = $this->getStoragePath(500). uniqid()."_500.".$image->getExtension();
+
+
+
+
+                $path = $image->getStoragePath();
                 $image->save($path);
 
+
+                $privatePaths = Settings::get("enable_private_paths");
                 if(!empty($privatePaths) && empty($maxWidth)) {
                     //just move image
                 }
@@ -88,6 +106,9 @@ class ImageService
             } catch(\RemotePathException $e) {
                 //we simply cant and dont want to process remote images ...
                 continue;
+            } catch(ExtensionNotAllowedException $e) {
+                //we dont want to process certain files I guess
+                continue;
             } catch (\Exception $e) {
                 Log::warning("[Offline.responsiveimages] could not process image: " . $this->imgPath);
                 continue;
@@ -101,7 +122,7 @@ class ImageService
     }
 
     private function shouldWatermark() {
-        $isWatermarkEnabled = Settings::get("enable_watermark");
+        $isWatermarkEnabled = $this->s->get("enable_watermark");
         if(!$isWatermarkEnabled) {
             return false;
         }
@@ -110,6 +131,25 @@ class ImageService
     }
 
 
+    private function getAllowedExtensions() {
+        if(empty($this->allowedExtensions)) {
+            $this->allowedExtensions = array_map(
+                function($element){ return trim($element); },
+                explode(",", $this->s->get("allowed_extensions"))
+            );
+        }
+
+        return $this->allowedExtensions;
+    }
+
+
+    protected function checkIfProcessable($image) {
+        if ( ! in_array($image->getExtension(), $this->getAllowedExtensions()) ) {
+            throw new ExtensionNotAllowedException();
+        }
+
+        return true;
+    }
 
     /**
      * Returns the absolute path for a image copy.

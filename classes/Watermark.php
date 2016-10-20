@@ -74,11 +74,12 @@ class Watermark extends Resizer
 
     /**
      * Watermark constructor.
-     * @param Resource $mainImage
+     * @param Resource $mainImagePath
+     * @return void|null if image too small
      */
-    public function __construct($mainImage)
+    public function __construct($mainImagePath)
     {
-        $this->mainImage = $mainImage;
+        $this->mainImage = $mainImagePath;
         $this->fetchSettings();
         $watermarkPath = $this->getWatermarkImgPath();
 
@@ -88,8 +89,6 @@ class Watermark extends Resizer
         parent::__construct($watermarkPath);
 
         $this->resizeToSettings();
-
-//        return $this;
     }
 
     private function fetchSettings()
