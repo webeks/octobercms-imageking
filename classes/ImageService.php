@@ -18,7 +18,7 @@ class ImageService
     /**
      * @var DomManipulator
      */
-    private      $dom;
+    private      $domImageFinder;
 
     private $imgPath;
 
@@ -40,7 +40,7 @@ class ImageService
     public function __construct($html)
     {
         $this->html           = $html;
-        $this->dom = new DomImageFinder($this->html);
+        $this->domImageFinder = new DomImageFinder($this->html);
         $this->s = Settings::instance();
     }
 
@@ -53,11 +53,11 @@ class ImageService
     public function process()
     {
         $srcSets = [];
-        $imageNodes = $this->dom->getImageNodes();
+        $imageNodes = $this->domImageFinder->getImageNodes();
         foreach ($imageNodes as $node) {
             try {
 
-                $this->imagePath = rawurldecode($this->dom->getSrcAttribute($node));
+                $this->imagePath = rawurldecode($this->domImageFinder->getSrcAttribute($node));
                 $image = new ImageManipulator($this->imagePath);
                 $this->checkIfProcessable($image);
 
@@ -72,13 +72,12 @@ class ImageService
                     $image->applyWatermark();
                 }
 
+                $newPath = $image->getStoragePath();
+                $image->save($newPath);
+                $node->setAttribute("src", $image->getPublicUrl($newPath));
 
 
-
-
-                $path = $image->getStoragePath();
-                $image->save($path);
-
+//                $image  = new ImageManipulator($newPath);
 
                 $privatePaths = Settings::get("enable_private_paths");
                 if(!empty($privatePaths) && empty($maxWidth)) {
@@ -118,7 +117,7 @@ class ImageService
         }
 
 //        return $this->domManipulator->addSrcSetAttributes($srcSets);
-        return $this->html;
+        return $this->domImageFinder->dom->saveHTML();
     }
 
     private function shouldWatermark() {

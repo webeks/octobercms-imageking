@@ -2,6 +2,7 @@
 
 namespace Code200\ImageKing\Classes;
 
+use Illuminate\Support\Facades\URL;
 use October\Rain\Database\Attach\Resizer;
 use October\Rain\Support\Facades\Str;
 use File as FileHelper;
@@ -107,7 +108,7 @@ class ImageManipulator extends Resizer
         if($slugify) {
             $newFilename = Str::slug($newFilename, "-");
         }
-        
+
         $newFilename .= "." . $this->extension;
         return $newFilename;
     }
@@ -154,4 +155,11 @@ class ImageManipulator extends Resizer
     }
 
 
+    public function getPublicUrl($diskPath) {
+        $relativePath = str_replace(base_path(), '', $diskPath);
+        $filename = basename($relativePath);
+        $relativeFolderPath = str_replace($filename, '', $relativePath);
+
+        return URL::to('/') . $relativeFolderPath . rawurlencode($filename) ;
+    }
 }
