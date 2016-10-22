@@ -30,6 +30,12 @@ tabs:
             label: Enable private paths
             comment: All images will be put outside of default upload folder in order to protect source files. You need to add protection route in your nginx or apache configuration manually.
             default: 0
+        enable_captions:
+            tab: General
+            type: switch
+            label: Enable captions from title atribute
+            default: 1
+
 
 
         # IMAGE RESIZE

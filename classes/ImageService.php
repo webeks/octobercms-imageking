@@ -89,9 +89,9 @@ class ImageService
                 //responsive versions
                 $this->prepareResponsiveVersions($this->imageFilePath, $node);
 
-
-                //private?
                 //captions
+                $this->applyCaptions($node);
+
 
 
             } catch (\RemotePathException $e) {
@@ -122,6 +122,21 @@ class ImageService
         return true;
     }
 
+
+    private function applyCaptions(&$node){
+
+        if(empty($this->s->get("enable_captions"))){
+            return;
+        }
+
+        $doc = new \DOMDocument();
+        $figureElement = $this->domImageFinder->dom->createElement("figure");
+        $captionElement = $this->domImageFinder->dom->createElement("caption", "ljhljhljhljhljh");
+
+        $node->parentNode->replaceChild($figureElement, $node);
+        $figureElement->appendChild($node);
+        $figureElement->appendChild($captionElement);
+    }
 
     /**
      * Returns array of allowed image extensions to be manipulated
