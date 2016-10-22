@@ -1,13 +1,9 @@
-<?php
+<?php namespace Code200\ImageKing\Classes;
 
-namespace Code200\ImageKing\Classes;
-
-
-use Code200\ImageKing\Classe\Resize\ImageResizer;
 use Code200\ImageKing\Classes\Exceptions\ExtensionNotAllowedException;
-use Code200\ImageKing\Classes\Resize\MaxWidthService;
 use Code200\Imageking\models\Settings;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 
 class ImageService
 {
@@ -15,18 +11,22 @@ class ImageService
      * @var string
      */
     private $html;
+
     /**
      * @var DomManipulator
      */
-    private      $domImageFinder;
+    private $domImageFinder;
 
-    private $imgPath;
+    /**
+     * Filepath of current image
+     * @var string
+     */
+    private $imageFilePath;
 
     /**
      * @var Settings
      */
     private $s;
-
 
     /**
      * Allowed image extensions
@@ -35,105 +35,105 @@ class ImageService
     private $allowedExtensions;
 
     /**
-     * @param $html
+     * Responsive sizes
+     * @var array
+     */
+    private $responsiveSizes;
+
+
+
+
+
+    /**
+     * ImageService constructor.
+     * @param string $html
      */
     public function __construct($html)
     {
-        $this->html           = $html;
+        $this->html = $html;
         $this->domImageFinder = new DomImageFinder($this->html);
         $this->s = Settings::instance();
     }
 
 
     /**
-     * Process images.
+     * Process images and returns modified HTML containing images.
      *
      * @return string
      */
     public function process()
     {
-        $srcSets = [];
         $imageNodes = $this->domImageFinder->getImageNodes();
+
         foreach ($imageNodes as $node) {
             try {
-
-                $this->imagePath = rawurldecode($this->domImageFinder->getSrcAttribute($node));
-                $image = new ImageManipulator($this->imagePath);
+                //get image
+                $this->imageFilePath = $this->getFilePathFromNode($node);
+                $image = new ImageManipulator($this->imageFilePath);
                 $this->checkIfProcessable($image);
 
-
-
+                //limit its output size in case we dont want to share sources
                 $maxWidth = $this->s->get("max_width");
-                if(!empty($maxWidth)) {
+                if (!empty($maxWidth)) {
                     $image->resize($maxWidth, null);
                 }
 
-                if($this->shouldWatermark()){
+                //watermark
+                if ($this->shouldWatermark()) {
                     $image->applyWatermark();
                 }
+                $newMainImagePath = $image->getStoragePath();
+                $image->save($newMainImagePath);
+                $node->setAttribute("src", $image->getPublicUrl($newMainImagePath));
 
-                $newPath = $image->getStoragePath();
-                $image->save($newPath);
-                $node->setAttribute("src", $image->getPublicUrl($newPath));
-
-
-//                $image  = new ImageManipulator($newPath);
-
-                $privatePaths = Settings::get("enable_private_paths");
-                if(!empty($privatePaths) && empty($maxWidth)) {
-                    //just move image
-                }
-
-                //get image path from node
-                //get image from path
-                //is max width set? => resize image from path
-                //is watermark set? => apply watermark, save image, change dom src
-                //else just optimize and save image to public folder and change dom ssrc if private images are set?
-                //is responsive => make smaller versions of main image and add srcset to
-                //is caption => transform dom
-                //
-                //
-                //move from public path
-                //add watermark
-                //add responsive
-                //add caption
-//                $responsiveImage = new ResponsiveImage($source);
+                //responsive versions
+                $this->prepareResponsiveVersions($this->imageFilePath, $node);
 
 
+                //private?
+                //captions
 
 
-            } catch(\RemotePathException $e) {
+            } catch (\RemotePathException $e) {
                 //we simply cant and dont want to process remote images ...
                 continue;
-            } catch(ExtensionNotAllowedException $e) {
+            } catch (ExtensionNotAllowedException $e) {
                 //we dont want to process certain files I guess
                 continue;
             } catch (\Exception $e) {
-                Log::warning("[Offline.responsiveimages] could not process image: " . $this->imgPath);
+                Log::warning("[Code200.ImageKing] could not process image: " . $this->imageFilePath);
                 continue;
             }
-
-//            $srcSets[$source] = $responsiveImage->getSourceSet();
         }
 
-//        return $this->domManipulator->addSrcSetAttributes($srcSets);
         return $this->domImageFinder->dom->saveHTML();
     }
 
-    private function shouldWatermark() {
+    /**
+     * Is watermarking enabled in settings
+     * @return bool
+     */
+    private function shouldWatermark()
+    {
         $isWatermarkEnabled = $this->s->get("enable_watermark");
-        if(!$isWatermarkEnabled) {
+        if (!$isWatermarkEnabled) {
             return false;
         }
-
         return true;
     }
 
 
-    private function getAllowedExtensions() {
-        if(empty($this->allowedExtensions)) {
+    /**
+     * Returns array of allowed image extensions to be manipulated
+     * @return array string
+     */
+    private function getAllowedExtensions()
+    {
+        if (empty($this->allowedExtensions)) {
             $this->allowedExtensions = array_map(
-                function($element){ return trim($element); },
+                function ($element) {
+                    return trim($element);
+                },
                 explode(",", $this->s->get("allowed_extensions"))
             );
         }
@@ -142,47 +142,95 @@ class ImageService
     }
 
 
-    protected function checkIfProcessable($image) {
-        if ( ! in_array($image->getExtension(), $this->getAllowedExtensions()) ) {
+    /**
+     * Returns int array of responsive sizes
+     * @return array int
+     */
+    private function getResponsiveSizes()
+    {
+        if (empty($this->responsiveSizes)) {
+            if(!empty($this->s->get("responsive_sizes"))) {
+                //fetch from settings
+                $this->responsiveSizes = array_map(
+                    function ($el) {
+                        if (empty($el)) {
+                            return null;
+                        }
+
+                        return (int)trim($el);
+                    },
+                    explode(",", $this->s->get("responsive_sizes"))
+                );
+                //limit max size to settings
+                $this->responsiveSizes = array_filter($this->responsiveSizes, function($el){
+                    if(!empty($el) && (empty($this->getMaxWidth()) || $this->getMaxWidth() >= $el)) {
+                        return true;
+                    }
+                });
+            } else {
+                $this->responsiveSizes = array();
+            }
+        }
+        return $this->responsiveSizes;
+    }
+
+    /**
+     * Checks if image is processable
+     * @param ImageManipulator $image
+     * @return bool
+     */
+    protected function checkIfProcessable($image)
+    {
+        if (!in_array($image->getExtension(), $this->getAllowedExtensions())) {
             throw new ExtensionNotAllowedException();
         }
-
         return true;
     }
 
+
+
     /**
-     * Returns the absolute path for a image copy.
-     *
-     * @param $size
-     *
-     * @return string
+     * @param $imagePath
+     * @param $node
+     * @return ImageManipulator
+     * @throws \Exception
      */
-    protected function getStoragePath($size)
+    private function prepareResponsiveVersions($imagePath, &$node)
     {
-        return $path = "/mnt/hgfs/WWW/gradnja-obnova/storage/app/uploads/public";
-//        if ( ! FileHelper::isDirectory($path)) {
-//            FileHelper::makeDirectory($path, 0777, true, true);
-//        }
-//
-//        $storagePath = $path . $this->getStorageFilename($size);
-//
-//        $this->sourceSet->push($size, $storagePath);
-//
-//        return $storagePath;
+        $srcSetAttributes = array();
+        foreach ($this->getResponsiveSizes() as $newSize) {
+            $image = new ImageManipulator($imagePath);
+            $image->resize($newSize, null);
+
+            if($this->shouldWatermark()){
+                $image->applyWatermark();
+            }
+
+            $newPath = $image->getStoragePath($newSize);
+            $image->save($newPath);
+
+            $srcSetAttributes[] = sprintf('%s %sw', $image->getPublicUrl($newPath), $newSize);
+        }
+
+        $node->setAttribute('srcset', implode(",", $srcSetAttributes));
+
+    }
+
+    private function getMaxWidth(){
+        return (int)trim($this->s->get("max_width"));
     }
 
 
     /**
-     * Returns the copy's filename.
+     * Remove the local host name from path src and add the base path.
      *
-     * @param $size
+     * @param $imagePath
      *
-     * @return string
+     * @return mixed
      */
-    protected function getStorageFilename($size)
+    protected function getFilePathFromNode($node)
     {
-        return $this->filename . '__' . $size . '.' . $this->extension;
+        $imagePath = rawurldecode($this->domImageFinder->getSrcAttribute($node));
+        return str_replace(URL::to('/'), '', base_path($imagePath));
     }
-
-
 }

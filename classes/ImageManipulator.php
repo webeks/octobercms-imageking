@@ -2,6 +2,8 @@
 
 namespace Code200\ImageKing\Classes;
 
+use Code200\ImageKing\Classes\Exceptions\FileNotFoundException;
+use Code200\ImageKing\Classes\Exceptions\NotLocalFileException;
 use Illuminate\Support\Facades\URL;
 use October\Rain\Database\Attach\Resizer;
 use October\Rain\Support\Facades\Str;
@@ -19,8 +21,14 @@ class ImageManipulator extends Resizer
      */
     public function __construct($mainImagePath)
     {
-        $this->originalImageFilePath = $mainImagePath;
-        parent::__construct($mainImagePath);
+        $this->originalImageFilePath = $mainImagePath; //$this->imagePathToFilePath($mainImagePath);
+        if ( ! FileHelper::isLocalPath($this->originalImageFilePath)) {
+            throw new NotLocalFileException('The specified path is not local.');
+        }
+        if ( ! file_exists($this->originalImageFilePath)) {
+            throw new FileNotFoundException('The specified file does not exist.');
+        }
+        parent::__construct($this->originalImageFilePath);
     }
 
 
@@ -38,6 +46,10 @@ class ImageManipulator extends Resizer
         }
 
         $watermark = $watermarkObj->getWatermark();
+        if(empty($watermark)) {
+            return $this;
+        }
+
         imagealphablending($this->image, true);
         imagecopy($this->image, $watermark,
                 $watermarkObj->getPositionX(),
@@ -49,10 +61,6 @@ class ImageManipulator extends Resizer
 
         return $this;
     }
-
-
-
-
 
     public function getExtension() {
         return $this->extension;
@@ -162,4 +170,8 @@ class ImageManipulator extends Resizer
 
         return URL::to('/') . $relativeFolderPath . rawurlencode($filename) ;
     }
+
+
+
+
 }

@@ -50,10 +50,10 @@ tabs:
             label: Enable responsive images
             default: 1
 
-        resize_dimensions:
+        responsive_sizes:
             tab: Image resize
-            label: Typical dimensions
-            comment: Typical dimensions for image resize (src-set)
+            label: Responsive dimensions
+            comment: Responsive dimensions for image resize (src-set)
             default: "300,600,1200,2400"
             type: text
 
