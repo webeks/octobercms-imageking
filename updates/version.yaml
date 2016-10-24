@@ -2,3 +2,7 @@
     - Initialize plugin.
 1.0.2:
     - Watermarking working on frontend
+1.0.3:
+    - Captions support
+1.0.4:
+    - Private paths support

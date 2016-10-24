@@ -2,10 +2,12 @@
 
 namespace Code200\ImageKing\Classes;
 
+use Code200\ImageKing\models\Settings;
 use Code200\ImageKing\Classes\Exceptions\FileNotFoundException;
 use Code200\ImageKing\Classes\Exceptions\NotLocalFileException;
 use Illuminate\Support\Facades\URL;
 use October\Rain\Database\Attach\Resizer;
+use October\Rain\Support\Facades\Config;
 use October\Rain\Support\Facades\Str;
 use File as FileHelper;
 
@@ -21,53 +23,64 @@ class ImageManipulator extends Resizer
      */
     public function __construct($mainImagePath)
     {
-        $this->originalImageFilePath = $mainImagePath; //$this->imagePathToFilePath($mainImagePath);
-        if ( ! FileHelper::isLocalPath($this->originalImageFilePath)) {
-            throw new NotLocalFileException('The specified path is not local.');
-        }
-        if ( ! file_exists($this->originalImageFilePath)) {
-            throw new FileNotFoundException('The specified file does not exist.');
-        }
+        $this->originalImageFilePath = $mainImagePath;
+        $this->validate();
         parent::__construct($this->originalImageFilePath);
     }
 
 
+    public function validate()
+    {
+        if (!FileHelper::isLocalPath($this->originalImageFilePath)) {
+            throw new NotLocalFileException('The specified path is not local.');
+        }
+        if (!file_exists($this->originalImageFilePath)) {
+            throw new FileNotFoundException('The specified file does not exist.');
+        }
+    }
 
     /**
      * Applies appropriate watermark to image object
      * @return $this
      */
-    public function applyWatermark() {
+    public function applyWatermark()
+    {
         $watermarkObj = new Watermark($this->image);
 
         //if we cant get watermark object (image too small) do nothing
-        if(empty($watermarkObj)){
+        if (empty($watermarkObj)) {
             return $this;
         }
 
         $watermark = $watermarkObj->getWatermark();
-        if(empty($watermark)) {
+        if (empty($watermark)) {
             return $this;
         }
 
         imagealphablending($this->image, true);
         imagecopy($this->image, $watermark,
-                $watermarkObj->getPositionX(),
-                $watermarkObj->getPositionY(),
-                0,0,
-                imagesx($watermark), imagesy($watermark));
+            $watermarkObj->getPositionX(),
+            $watermarkObj->getPositionY(),
+            0, 0,
+            imagesx($watermark), imagesy($watermark));
 
         imagedestroy($watermark);
 
         return $this;
     }
 
-    public function getExtension() {
+    public function getExtension()
+    {
+        if ($this->extension === "jpeg") {
+            return "jpg";
+        }
+
         return $this->extension;
     }
 
 
-    public function getOriginalImageFilePath() {
+    public function getOriginalImageFilePath()
+    {
         return $this->originalImageFilePath;
     }
 
@@ -77,10 +90,11 @@ class ImageManipulator extends Resizer
      */
     protected function getFilename()
     {
-        if(empty($this->filename)) {
-            $basename = basename($this->originalImageFilePath);
-            $this->filename  = pathinfo($basename, PATHINFO_FILENAME);
+        if (empty($this->filename)) {
+            $basename = basename($this->getOriginalImageFilePath());
+            $this->filename = pathinfo($basename, PATHINFO_FILENAME);
         }
+
         return $this->filename;
     }
 
@@ -109,15 +123,16 @@ class ImageManipulator extends Resizer
     public function getNewFilename($size = null, $slugify = true)
     {
         $newFilename = $this->getFilename();
-        if(!empty($size)) {
+        if (!empty($size)) {
             $newFilename .= "-" . $size;
         }
 
-        if($slugify) {
+        if ($slugify) {
             $newFilename = Str::slug($newFilename, "-");
         }
 
-        $newFilename .= "." . $this->extension;
+        $newFilename .= "." . $this->getExtension();
+
         return $newFilename;
     }
 
@@ -153,25 +168,53 @@ class ImageManipulator extends Resizer
      */
     public function getStoragePath($size = null)
     {
+
+//        die($this->getOriginalImageFilePath());
+
         $path = temp_path('public/' . $this->getPartitionDirectory());
-        if ( ! FileHelper::isDirectory($path)) {
+
+        if (!Settings::get("private_paths_obstruction")) {
+            $folderPath = dirname($this->getOriginalImageFilePath());
+            $uploadsPath = base_path() . Config::get('cms.storage.uploads.path', '/storage/app/uploads');
+            $mediaPath = base_path() . Config::get('cms.media.uploads.path', '/storage/app/media');
+
+            $relativePath = str_replace($uploadsPath, 'uploads', $folderPath);
+            $relativePath = str_replace($mediaPath, 'media', $relativePath);
+
+            //we found a match either in uploads or media folder
+            if ($relativePath != $folderPath) {
+                $path = temp_path($relativePath . "/");
+            }
+        }
+
+        if (!FileHelper::isDirectory($path)) {
             FileHelper::makeDirectory($path, 0777, true, true);
         }
 
         $storagePath = $path . $this->getNewFilename($size);
+
         return $storagePath;
     }
 
 
-    public function getPublicUrl($diskPath) {
+    public function getPublicUrl($diskPath)
+    {
         $relativePath = str_replace(base_path(), '', $diskPath);
         $filename = basename($relativePath);
         $relativeFolderPath = str_replace($filename, '', $relativePath);
 
-        return URL::to('/') . $relativeFolderPath . rawurlencode($filename) ;
+        return URL::to('/') . $relativeFolderPath . rawurlencode($filename);
     }
 
 
+    /**
+     * Returns width of current image obj
+     * @return int
+     */
+    public function getWidth()
+    {
+        return $this->width;
+    }
 
 
 }

@@ -72,27 +72,34 @@ class ImageService
                 $image = new ImageManipulator($this->imageFilePath);
                 $this->checkIfProcessable($image);
 
+                $imgChanged = false;
+
                 //limit its output size in case we dont want to share sources
                 $maxWidth = $this->s->get("max_width");
-                if (!empty($maxWidth)) {
+                if (!empty($maxWidth) && $maxWidth < $image->getWidth() ) {
                     $image->resize($maxWidth, null);
+                    $imgChanged = true;
                 }
 
                 //watermark
                 if ($this->shouldWatermark()) {
                     $image->applyWatermark();
+                    $imgChanged = true;
                 }
-                $newMainImagePath = $image->getStoragePath();
-                $image->save($newMainImagePath);
-                $node->setAttribute("src", $image->getPublicUrl($newMainImagePath));
+
+
+                if($imgChanged || $this->s->get("enable_private_paths")) {
+                    $newMainImagePath = $image->getStoragePath();
+                    $image->save($newMainImagePath);
+                    $node->setAttribute("src", $image->getPublicUrl($newMainImagePath));
+                }
+
 
                 //responsive versions
                 $this->prepareResponsiveVersions($this->imageFilePath, $node);
 
                 //captions
                 $this->applyCaptions($node);
-
-
 
             } catch (\RemotePathException $e) {
                 //we simply cant and dont want to process remote images ...

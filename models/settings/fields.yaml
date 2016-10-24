@@ -30,6 +30,12 @@ tabs:
             label: Enable private paths
             comment: All images will be put outside of default upload folder in order to protect source files. You need to add protection route in your nginx or apache configuration manually.
             default: 0
+        private_paths_obstruction:
+                    tab: General
+                    type: switch
+                    label: Obstruct directory structure
+                    comment: Instead of keeping directory structure directory structure of generated images will be obstructed. Probably not good for SEO.
+                    default: 0
         enable_captions:
             tab: General
             type: switch
@@ -59,7 +65,7 @@ tabs:
         responsive_sizes:
             tab: Image resize
             label: Responsive dimensions
-            comment: Responsive dimensions for image resize (src-set)
+            comment: Responsive dimensions for image resize (src-set). Images will be stored as separated files in temp folder. You will save bandwith but will increase disk size required.
             default: "300,600,1200,2400"
             type: text
 
