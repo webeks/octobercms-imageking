@@ -8,7 +8,7 @@ use Code200\Imageking\models\Settings;
 use League\Flysystem\Exception;
 use October\Rain\Support\Facades\Config;
 use PluginTestCase;
-use ReflectionClass;
+use File as FileHelper;
 
 class ImageManipulatorTest extends PluginTestCase
 {
@@ -18,6 +18,8 @@ class ImageManipulatorTest extends PluginTestCase
 
     public function setUp()
     {
+//        $this->markTestSkipped();
+
         parent::setUp();
         $this->testImagePath = base_path("plugins/Code200/imageking/tests/src/main.jpg");
         $this->testWatermarkPath = base_path("plugins/Code200/imageking/tests/src/watermark.png");
@@ -62,10 +64,12 @@ class ImageManipulatorTest extends PluginTestCase
         $testImageUploadsDir = base_path() . Config::get('cms.storage.uploads.path') . "/test.jpg";
         $testImage1 = base_path() . Config::get('cms.storage.media.path') . "/news/some-folder/test.jpg";
 
+
         //we dont have actual image so we need to mock few methods
         $getStoragePath = function($imagePath)  {
+
             $imageManipulatorMock = $this->getMockBuilder('Code200\ImageKing\Classes\ImageManipulator')
-                ->setMethods(array('getOriginalImageFilePath', "getExtension", "__construct"))
+                ->setMethods(array('getOriginalImageFilePath', "getExtension", "__construct", "makeDirectory"))
                 ->setConstructorArgs(array($imagePath))
                 ->disableOriginalConstructor()
                 ->getMock();
@@ -87,7 +91,6 @@ class ImageManipulatorTest extends PluginTestCase
 
         Settings::set('private_paths_obstruction', true);
         $this->assertNotEquals(temp_path("uploads/test.jpg"), $getStoragePath($testImageUploadsDir));
-
 
         Settings::set('private_paths_obstruction', $settingsValue);
     }

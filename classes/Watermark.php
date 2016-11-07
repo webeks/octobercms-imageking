@@ -3,42 +3,19 @@
 namespace Code200\ImageKing\Classes;
 
 
+//use Code200\Imageking\models\Settings;
 use Code200\Imageking\models\Settings;
 use October\Rain\Database\Attach\Resizer;
-use Backend\Models\User;
 use System\Models\File;
 
 class Watermark extends Resizer
 {
 
     /**
-     * Settings instance holder
-     * @var Settings
-     */
-    private $s;
-
-
-    /**
-     * At which size we need to use small watermark setting
-     * Value fetched from settings
-     * @var integer
-     */
-    private $smallWatermarkLimit;
-
-
-    /**
-     * At which size we need to ignore adding watermark
-     * Value fetched from settings
-     * @var  integer
-     */
-    private $noWatermarkLimit;
-
-
-    /**
      * Watermark file resource
      * @var File
      */
-    private $watermarkResource;
+    protected $watermarkResourceFilePath;
 
 
     /**
@@ -60,79 +37,48 @@ class Watermark extends Resizer
     private $watermarkRelativePosY;
 
     /**
-     * Image Resource we are applying watermark to
-     * @var Resource
-     */
-    private $mainImage;
-
-
-    /**
      * Main Image width in px
      * @var integer
      */
     private $mainImageWidth;
 
+
+    /**
+     * Main image height in px
+     * @var integer
+     */
+    private $mainImageHeight;
+
     /**
      * Watermark constructor.
-     * @param Resource $mainImagePath
-     * @return void|null if image too small
      */
-    public function __construct($mainImagePath)
+    public function __construct($watermarkResource)
     {
-        $this->mainImage = $mainImagePath;
-        $this->fetchSettings();
-        $watermarkPath = $this->getWatermarkImgPath();
+        $this->watermarkResourceFilePath = $this->getWatermarkFilePathFromResource($watermarkResource);
 
-        if(empty($watermarkPath)){
+        if(empty($this->watermarkResourceFilePath)){
             return null;
         }
-        parent::__construct($watermarkPath);
-
-        $this->resizeToSettings();
-    }
-
-    private function fetchSettings()
-    {
-        $this->s = Settings::instance();
-        $this->smallWatermarkLimit = $this->s->get("watermark_small_limit");
-        $this->noWatermarkLimit = $this->s->get("nowatermark_limit");
-        $this->mainImageWidth = imagesx($this->mainImage);
-
-        if($this->noWatermarkLimit >= $this->mainImageWidth){
-            $this->watermarkResource = null;
-        }
-        else if($this->smallWatermarkLimit >= $this->mainImageWidth){ //use small settings
-            $this->watermarkResource = $this->s->watermark_img_small;
-            $this->watermarkRelativeSize = $this->s->get("watermark_size_small");
-            $this->watermarkRelativePosX = $this->s->get("watermark_position_x_small");
-            $this->watermarkRelativePosY = $this->s->get("watermark_position_y_small");
-        }
-        else if(empty($watermarkObj)) { //use normal settings
-            $this->watermarkResource = $this->s->watermark_img;
-            $this->watermarkRelativeSize = $this->s->get("watermark_size");
-            $this->watermarkRelativePosX = $this->s->get("watermark_position_x");
-            $this->watermarkRelativePosY = $this->s->get("watermark_position_y");
-        }
+        parent::__construct($this->watermarkResourceFilePath);
     }
 
 
     /**
-     * Gets full path of appropriate watermark image on disk
+     * @param $resource
      * @return null|string
      */
-    private function getWatermarkImgPath() {
-        if(empty($this->watermarkResource)){
-            return null;
-        }
+    private function getWatermarkFilePathFromResource($resource) {
+        if(empty($resource)) return null;
+        if(is_string($resource)) return $resource;
 
-        return base_path( $this->watermarkResource->getPath() );
+        return base_path($resource->getPath());
     }
 
 
     /**
      * Resize watermark image to percentage set in settings
      */
-    private function resizeToSettings(){
+    public function applyRelativeSize(){
         $mainImageWidth = $this->mainImageWidth;
         $watermarkImageWidth = imagesx($this->image);
         //only scale watermark down
@@ -141,10 +87,27 @@ class Watermark extends Resizer
             $watermarkImageWidth
         );
 
-        $this->resize($newWatermarkWidthInPx, null);
+        return $this->resize($newWatermarkWidthInPx, null);
     }
 
 
+    public function setWatermarkRelativePosition($X, $Y) {
+        $this->watermarkRelativePosX = (int) $X;
+        $this->watermarkRelativePosY = (int) $Y;
+        return $this;
+    }
+
+    public function setWatermarkRelativeSize($relativeSize) {
+        $this->watermarkRelativeSize = (int) $relativeSize;
+        return $this;
+    }
+    
+    public function setMainImageSize($mainImageWidth, $mainImageHeight) {
+        $this->mainImageWidth = (int) $mainImageWidth;
+        $this->mainImageHeight = (int) $mainImageHeight;
+        return $this;
+    }
+    
     public function getWatermark() {
         return $this->image;
     }
@@ -168,11 +131,10 @@ class Watermark extends Resizer
      * @return int
      */
     public function getPositionY() {
-        $mainImageHeight = imagesy($this->mainImage);
-        $posY = $mainImageHeight * $this->watermarkRelativePosY / 100;
+        $posY = $this->mainImageHeight * $this->watermarkRelativePosY / 100;
 
         if($this->watermarkRelativePosY < 0){
-            $posY = $mainImageHeight - imagesy($this->image) + $posY;
+            $posY = (int) $this->mainImageHeight - imagesy($this->image) + $posY;
         }
 
         return (int)$posY;

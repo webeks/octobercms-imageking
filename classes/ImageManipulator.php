@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\URL;
 use October\Rain\Database\Attach\Resizer;
 use October\Rain\Support\Facades\Config;
 use October\Rain\Support\Facades\Str;
-use File as FileHelper;
+use Illuminate\Support\Facades\File as FileHelper;
 
 
 class ImageManipulator extends Resizer
@@ -45,7 +45,7 @@ class ImageManipulator extends Resizer
      */
     public function applyWatermark()
     {
-        $watermarkObj = new Watermark($this->image);
+        $watermarkObj = $this->getWatermarkObject();
 
         //if we cant get watermark object (image too small) do nothing
         if (empty($watermarkObj)) {
@@ -58,6 +58,8 @@ class ImageManipulator extends Resizer
         }
 
         imagealphablending($this->image, true);
+//        imagecolortransparent($this->image, imagecolorallocatealpha($this->image, 0, 0, 0, 127));
+        imagesavealpha($this->image, true);
         imagecopy($this->image, $watermark,
             $watermarkObj->getPositionX(),
             $watermarkObj->getPositionY(),
@@ -67,6 +69,65 @@ class ImageManipulator extends Resizer
         imagedestroy($watermark);
 
         return $this;
+    }
+
+    protected function getWatermarkObject()
+    {
+        $settings = Settings::instance();
+        $mainImageWidth = $this->getWidth();
+
+        if ($settings->get("nowatermark_limit") >= $mainImageWidth) {
+            return;
+        } else {
+            if ($settings->get("watermark_small_limit") >= $mainImageWidth) { //use small settings
+                $watermarkResouce = $this->getSmallWatermarkFilePath();
+                $watermarkRelativeSize = $settings->get("watermark_size_small");
+                $watermarkRelativePosX = $settings->get("watermark_position_x_small");
+                $watermarkRelativePosY = $settings->get("watermark_position_y_small");
+            } else { //use normal settings
+                $watermarkResouce = $this->getWatermarkFilePath();
+                $watermarkRelativeSize = $settings->get("watermark_size");
+                $watermarkRelativePosX = $settings->get("watermark_position_x");
+                $watermarkRelativePosY = $settings->get("watermark_position_y");
+            }
+        }
+
+        $watermark = new Watermark($watermarkResouce);
+        $watermark
+            ->setWatermarkRelativePosition($watermarkRelativePosX, $watermarkRelativePosY)
+            ->setWatermarkRelativeSize($watermarkRelativeSize)
+            ->setMainImageSize(imagesx($this->image), imagesy($this->image))
+            ->applyRelativeSize();
+
+        return $watermark;
+
+    }
+
+
+    /**
+     * Returns small watermark from settings
+     * @return mixed
+     */
+    protected function getSmallWatermarkFilePath()
+    {
+        $settings = Settings::instance();
+        return $settings->watermark_img_small;
+    }
+
+    /**
+     * Returns watermark from settings
+     * @return mixed
+     */
+    public function getWatermarkFilePath()
+    {
+        $settings = Settings::instance();
+        return $settings->watermark_img;
+    }
+
+
+    public function getImage()
+    {
+        return $this->image;
     }
 
     public function getExtension()
@@ -168,18 +229,24 @@ class ImageManipulator extends Resizer
      */
     public function getStoragePath($size = null)
     {
+        $path = $this->getStoragePathDir();
+        $storagePath = $path . $this->getNewFilename($size);
 
-//        die($this->getOriginalImageFilePath());
+        return $storagePath;
+    }
 
+    public function getStoragePathDir()
+    {
         $path = temp_path('public/' . $this->getPartitionDirectory());
 
         if (!Settings::get("private_paths_obstruction")) {
-            $folderPath = dirname($this->getOriginalImageFilePath());
-            $uploadsPath = base_path() . Config::get('cms.storage.uploads.path', '/storage/app/uploads');
-            $mediaPath = base_path() . Config::get('cms.media.uploads.path', '/storage/app/media');
+             $folderPath = dirname($this->getOriginalImageFilePath());
+
+             $uploadsPath = base_path() . Config::get('cms.storage.uploads.path', '/storage/app/uploads');
+             $mediaPath = base_path() . Config::get('cms.media.uploads.path', '/storage/app/media');
 
             $relativePath = str_replace($uploadsPath, 'uploads', $folderPath);
-            $relativePath = str_replace($mediaPath, 'media', $relativePath);
+             $relativePath = str_replace($mediaPath, 'media', $relativePath);
 
             //we found a match either in uploads or media folder
             if ($relativePath != $folderPath) {
@@ -187,15 +254,10 @@ class ImageManipulator extends Resizer
             }
         }
 
-        if (!FileHelper::isDirectory($path)) {
-            FileHelper::makeDirectory($path, 0777, true, true);
-        }
+        $this->makeDirectory($path);
 
-        $storagePath = $path . $this->getNewFilename($size);
-
-        return $storagePath;
+        return $path;
     }
-
 
     public function getPublicUrl($diskPath)
     {
@@ -213,8 +275,16 @@ class ImageManipulator extends Resizer
      */
     public function getWidth()
     {
-        return $this->width;
+        return parent::getWidth();
     }
 
-
+    /**
+     * @param $path
+     */
+    protected function makeDirectory($path)
+    {
+        if (!FileHelper::isDirectory($path)) {
+            FileHelper::makeDirectory($path, 0777, true, true);
+        }
+    }
 }

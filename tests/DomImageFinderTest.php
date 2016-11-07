@@ -6,9 +6,19 @@ use Code200\ImageKing\Classes\DomImageFinder;
 use Code200\Imageking\models\Settings;
 use PluginTestCase;
 
+/**
+ * Class DomImageFinderTest
+ * @package Code200\ImageKing\Tests
+ *
+ */
 class DomImageFinderTest extends PluginTestCase
 {
 
+    public function setUp()
+    {
+//        $this->markTestSkipped();
+        parent::setUp();
+    }
 
     public function testGetImageSources()
     {

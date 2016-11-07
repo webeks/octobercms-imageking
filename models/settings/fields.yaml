@@ -56,11 +56,6 @@ tabs:
             tab: Image resize
             type: section
             label: Responsive images
-        strings:
-            tab: Image resize
-            type: switch
-            label: Enable responsive images
-            default: 1
 
         responsive_sizes:
             tab: Image resize

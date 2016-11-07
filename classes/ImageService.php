@@ -51,8 +51,13 @@ class ImageService
     public function __construct($html)
     {
         $this->html = $html;
-        $this->domImageFinder = new DomImageFinder($this->html);
+        $this->setDomImageFinder();
         $this->s = Settings::instance();
+    }
+
+
+    protected function setDomImageFinder() {
+        $this->domImageFinder = new DomImageFinder($this->html);
     }
 
 
@@ -69,7 +74,7 @@ class ImageService
             try {
                 //get image
                 $this->imageFilePath = $this->getFilePathFromNode($node);
-                $image = new ImageManipulator($this->imageFilePath);
+                $image = $this->getNewImageManipulator($this->imageFilePath);
                 $this->checkIfProcessable($image);
 
                 $imgChanged = false;
@@ -109,11 +114,21 @@ class ImageService
                 continue;
             } catch (\Exception $e) {
                 Log::warning("[Code200.ImageKing] could not process image: " . $this->imageFilePath);
-                continue;
+//                continue;
             }
         }
 
         return $this->domImageFinder->dom->saveHTML();
+    }
+
+
+    /**
+     * Return new image manipulator object
+     * @param $imagePath
+     * @return ImageManipulator
+     */
+    protected function getNewImageManipulator($imagePath){
+        return new ImageManipulator($imagePath);
     }
 
     /**
@@ -136,7 +151,7 @@ class ImageService
             return;
         }
 
-        $doc = new \DOMDocument();
+//        $doc = new \DOMDocument();
         $figureElement = $this->domImageFinder->dom->createElement("figure");
         $captionElement = $this->domImageFinder->dom->createElement("caption", "ljhljhljhljhljh");
 
@@ -204,7 +219,7 @@ class ImageService
     protected function checkIfProcessable($image)
     {
         if (!in_array($image->getExtension(), $this->getAllowedExtensions())) {
-            throw new ExtensionNotAllowedException();
+            throw new ExtensionNotAllowedException("Extension not allowed.");
         }
         return true;
     }
@@ -221,7 +236,7 @@ class ImageService
     {
         $srcSetAttributes = array();
         foreach ($this->getResponsiveSizes() as $newSize) {
-            $image = new ImageManipulator($imagePath);
+            $image = $this->getNewImageManipulator($imagePath);
             $image->resize($newSize, null);
 
             if($this->shouldWatermark()){
@@ -235,9 +250,12 @@ class ImageService
         }
 
         $node->setAttribute('srcset', implode(",", $srcSetAttributes));
-
     }
 
+    /**
+     * Gets max (limit) image width from settings
+     * @return int
+     */
     private function getMaxWidth(){
         return (int)trim($this->s->get("max_width"));
     }
@@ -246,8 +264,7 @@ class ImageService
     /**
      * Remove the local host name from path src and add the base path.
      *
-     * @param $imagePath
-     *
+     * @param $node
      * @return mixed
      */
     protected function getFilePathFromNode($node)
@@ -255,4 +272,8 @@ class ImageService
         $imagePath = rawurldecode($this->domImageFinder->getSrcAttribute($node));
         return str_replace(URL::to('/'), '', base_path($imagePath));
     }
+
+
+
+
 }

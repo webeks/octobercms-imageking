@@ -1,20 +1,13 @@
-<?php namespace Code200\Imageking\models;
-
+<?php
+namespace Code200\ImageKing\Models;
 
 use October\Rain\Database\Model;
 
-use System\Models\File;
-
 class Settings extends Model
 {
-
-//    use \October\Rain\Database\Traits\Hashable;
-//    use \October\Rain\Database\Traits\Purgeable;
-//    use \October\Rain\Database\Traits\Validation;
-
     public $implement = ['System.Behaviors.SettingsModel'];
 
-    public $settingsCode = 'code200_eucookielawmadness_settings';
+    public $settingsCode = 'code200_imageking_settings';
 
     public $settingsFields = 'fields.yaml';
 
@@ -25,13 +18,4 @@ class Settings extends Model
         'watermark_img' => ['System\Models\File', "public" => false],
         'watermark_img_small' => ['System\Models\File', 'public' => false]
     ];
-
-
-
-    public function getWatermarkImg() {
-        return $this->watermark_img;
-    }
-
-
-
 }
