@@ -147,13 +147,12 @@ class ImageService
 
     private function applyCaptions(&$node){
 
-        if(empty($this->s->get("enable_captions"))){
+        if(empty($this->s->get("enable_captions")) && ! empty($node->getAttribute("title"))){
             return;
         }
 
-//        $doc = new \DOMDocument();
         $figureElement = $this->domImageFinder->dom->createElement("figure");
-        $captionElement = $this->domImageFinder->dom->createElement("caption", "ljhljhljhljhljh");
+        $captionElement = $this->domImageFinder->dom->createElement("figcaption", $node->getAttribute("title"));
 
         $node->parentNode->replaceChild($figureElement, $node);
         $figureElement->appendChild($node);
