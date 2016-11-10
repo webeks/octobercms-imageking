@@ -79,7 +79,7 @@ class ImageManipulator extends Resizer
         if ($settings->get("nowatermark_limit") >= $mainImageWidth) {
             return;
         } else {
-            if ($settings->get("watermark_small_limit") >= $mainImageWidth) { //use small settings
+            if ($settings->get("watermark_small_limit") >= $mainImageWidth && !empty($this->getSmallWatermarkFilePath())) { //use small settings
                 $watermarkResouce = $this->getSmallWatermarkFilePath();
                 $watermarkRelativeSize = $settings->get("watermark_size_small");
                 $watermarkRelativePosX = $settings->get("watermark_position_x_small");
