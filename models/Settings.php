@@ -13,9 +13,8 @@ class Settings extends Model
 
     protected $cache = [];
 
-
     public $attachOne = [
-        'watermark_img' => ['System\Models\File', "public" => false],
+        'watermark_img'       => ['System\Models\File', "public" => false],
         'watermark_img_small' => ['System\Models\File', 'public' => false]
     ];
 }
