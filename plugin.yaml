@@ -3,4 +3,4 @@ plugin:
     description: 'code200.imageking::lang.plugin.description'
     author: 'Miha Trtnik'
     icon: oc-icon-cubes
-    homepage: ''
+    homepage: 'https://github.com/webeks/octobercms-imageking'
