@@ -41,6 +41,11 @@ tabs:
             type: switch
             label: Enable captions from title atribute
             default: 1
+        enable_cache:
+            tab: General
+            type: switch
+            label: Enable cache
+            default: 1
 
 
 

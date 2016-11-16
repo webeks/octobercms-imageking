@@ -29,6 +29,7 @@ class FunctionalTest extends PluginTestCase
         Settings::set("max_width", 600);
         Settings::set("responsive_sizes", "100,200");
         Settings::set("allowed_extensions", "jpg,jpeg");
+        Settings::set("enable_cache", false);
     }
 
 
@@ -61,8 +62,12 @@ class FunctionalTest extends PluginTestCase
 
         //check files exist
         $this->assertFileExists($storagePath . "main.jpg");
+        $this->assertEquals("bfbacda9cb4906fb45df9b530f8e541c", md5_file($storagePath . "main.jpg"));
         $this->assertFileExists($storagePath . "main-100.jpg");
+        $this->assertEquals("29ce490b0f3a22cd8e1696aadca99ae4", md5_file($storagePath . "main-100.jpg"));
         $this->assertFileExists($storagePath . "main-200.jpg");
+        $this->assertEquals("cf82fed70356abcbb6079116b827aa05", md5_file($storagePath . "main-200.jpg"));
+
 
         list($width, $height) = getimagesize($storagePath . "main.jpg");
         $this->assertEquals(600, $width);
@@ -106,6 +111,15 @@ class FunctionalTest extends PluginTestCase
 
         $modifiedHtml = $imageServiceMock->process();
 
+        $storagePath = ($this->getImageManipulatorMock($this->testImageFilePath))->getStoragePathDir();
+        $this->assertFileExists($storagePath . "main-watermark-top-left.jpg");
+        $this->assertEquals("22ac6cd3244ea60c87c955defc6eda99", md5_file($storagePath . "main-watermark-top-left.jpg"));
+
+        $this->assertFileExists($storagePath . "main-100-no-watermark-100.jpg");
+        $this->assertEquals("29ce490b0f3a22cd8e1696aadca99ae4", md5_file($storagePath . "main-100-no-watermark-100.jpg"));
+
+        $this->assertFileExists($storagePath . "main-200-watermark-small-200.jpg");
+        $this->assertEquals("c31585732f27b60c8cd40d099aa4ac94", md5_file($storagePath . "main-200-watermark-small-200.jpg"));
 
         $this->notifyWhereToFindTestProducedImages();
     }
@@ -128,6 +142,10 @@ class FunctionalTest extends PluginTestCase
             ->willReturn($this->getImageManipulatorMock($this->testImageFilePath, "main-watermark-bottom-right"));
 
         $modifiedHtml = $imageServiceMock->process();
+
+        $storagePath = ($this->getImageManipulatorMock($this->testImageFilePath))->getStoragePathDir();
+        $this->assertFileExists($storagePath . "main-watermark-bottom-right.jpg");
+        $this->assertEquals("b20d0344519ecd2021de928a88a38302", md5_file($storagePath . "main-watermark-bottom-right.jpg"));
     }
 
 

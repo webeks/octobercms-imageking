@@ -1,5 +1,6 @@
 <?php namespace Code200\ImageKing\Classes;
 
+use Cms\Helpers\File;
 use Code200\ImageKing\Classes\Exceptions\ExtensionNotAllowedException;
 use Code200\Imageking\models\Settings;
 use Illuminate\Support\Facades\Log;
@@ -77,28 +78,14 @@ class ImageService
                 $image = $this->getNewImageManipulator($this->imageFilePath);
                 $this->checkIfProcessable($image);
 
-                $imgChanged = false;
 
-                //limit its output size in case we dont want to share sources
-                $maxWidth = $this->s->get("max_width");
-                if (!empty($maxWidth) && $maxWidth < $image->getWidth() ) {
-                    $image->resize($maxWidth, null);
-                    $imgChanged = true;
+                //check cache
+                $newMainImagePath = $image->getStoragePath();
+                if(!file_exists($newMainImagePath) || empty(Settings::get("enable_cache", 0)) ) {
+                    $imgChanged = $this->processMainImage($image);
                 }
 
-                //watermark
-                if ($this->shouldWatermark()) {
-                    $image->applyWatermark();
-                    $imgChanged = true;
-                }
-
-
-                if($imgChanged || $this->s->get("enable_private_paths")) {
-                    $newMainImagePath = $image->getStoragePath();
-                    $image->save($newMainImagePath);
-                    $node->setAttribute("src", $image->getPublicUrl($newMainImagePath));
-                }
-
+                $node->setAttribute("src", $image->getPublicUrl($newMainImagePath));
 
                 //responsive versions
                 $this->prepareResponsiveVersions($this->imageFilePath, $node);
@@ -114,13 +101,37 @@ class ImageService
                 continue;
             } catch (\Exception $e) {
                 Log::warning("[Code200.ImageKing] could not process image: " . $this->imageFilePath);
-//                continue;
+                continue;
             }
         }
 
         return $this->domImageFinder->dom->saveHTML();
     }
 
+    private function processMainImage(&$image) {
+        $imgChanged = false;
+
+        //limit its output size in case we dont want to share sources
+        $maxWidth = $this->s->get("max_width");
+        if (!empty($maxWidth) && $maxWidth < $image->getWidth() ) {
+            $image->resize($maxWidth, null);
+            $imgChanged = true;
+        }
+
+        //watermark
+        if ($this->shouldWatermark()) {
+            $image->applyWatermark();
+            $imgChanged = true;
+        }
+
+        if($imgChanged || $this->s->get("enable_private_paths")) {
+            $newMainImagePath = $image->getStoragePath();
+            $image->save($newMainImagePath);
+//            $node->setAttribute("src", $image->getPublicUrl($newMainImagePath));
+        }
+
+        return $imgChanged;
+    }
 
     /**
      * Return new image manipulator object
@@ -235,17 +246,23 @@ class ImageService
     {
         $srcSetAttributes = array();
         foreach ($this->getResponsiveSizes() as $newSize) {
+
             $image = $this->getNewImageManipulator($imagePath);
-            $image->resize($newSize, null);
-
-            if($this->shouldWatermark()){
-                $image->applyWatermark();
-            }
-
             $newPath = $image->getStoragePath($newSize);
-            $image->save($newPath);
+            if( !file_exists($newPath) || empty(Settings::get("enable_cache", false))){
+                $image->resize($newSize, null);
 
-            $srcSetAttributes[] = sprintf('%s %sw', $image->getPublicUrl($newPath), $newSize);
+                if($this->shouldWatermark()){
+                    $image->applyWatermark();
+                }
+
+//                $newPath = $image->getStoragePath($newSize);
+                $image->save($newPath);
+                $srcSetAttributes[] = sprintf('%s %sw', $image->getPublicUrl($newPath), $newSize);
+
+            } else {
+                $srcSetAttributes[] = sprintf('%s %sw', $image->getPublicUrl($imagePath), $newSize);
+            }
         }
 
         $node->setAttribute('srcset', implode(",", $srcSetAttributes));

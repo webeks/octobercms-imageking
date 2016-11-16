@@ -1,7 +1,7 @@
 <?php return [
     'plugin' => [
         'name' => 'Image King',
-        'description' => ''
+        'description' => 'Manage image manipulation'
     ],
     'settings' => [
         'label' => "Image King",

@@ -28,6 +28,8 @@ It is very likely that there will be bugs with some specific html markup. If you
 * generation of appropriate HTML on blog post save instead on client request
 * special button under settings allowing to regenerate all HMTL from blog posts
 
+I would appreciate some help. However please [read this before submitting a pull request](http://blog.ploeh.dk/2015/01/15/10-tips-for-better-pull-requests/)
+
 ##Attributions
 * Inspiration and part of the code is based on [ResponsiveImages Plugin for October CMS](https://github.com/webeks/oc-responsive-images-plugin)
 * Logo was combined from resources from [Freepik](http://www.freepik.com)
