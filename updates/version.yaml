@@ -8,3 +8,5 @@
     - Private paths support
 1.1.0:
     - Cache -> dont process images if they already exist
+1.1.1:
+    - permission added code200.imageking.modify_settings

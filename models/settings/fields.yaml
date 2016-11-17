@@ -46,6 +46,11 @@ tabs:
             type: switch
             label: Enable cache
             default: 1
+#        clear_cache:
+#            tab: General
+#            type: partial
+#            path: $/Code200/imageking/controllers/cache/_clear_tmp_files.htm
+
 
 
 

@@ -23,7 +23,7 @@ You can define exclude class in settings. If you would use default _noProcess_ c
 It is very likely that there will be bugs with some specific html markup. If you encounter such a bug, please report it.
 
 ##Future plans
-* only generate new image if it doesnt exist in temporary folder already
+* <strike>only generate new image if it doesnt exist in temporary folder already</strike>
 * special button under settings allowing to purge temporary folder
 * generation of appropriate HTML on blog post save instead on client request
 * special button under settings allowing to regenerate all HMTL from blog posts
