@@ -31,11 +31,11 @@ tabs:
             comment: All images will be put outside of default upload folder in order to protect source files. You need to add protection route in your nginx or apache configuration manually.
             default: 0
         private_paths_obstruction:
-                    tab: General
-                    type: switch
-                    label: Obstruct directory structure
-                    comment: Instead of keeping directory structure directory structure of generated images will be obstructed. Probably not good for SEO.
-                    default: 0
+            tab: General
+            type: switch
+            label: Obstruct directory structure
+            comment: Instead of keeping directory structure directory structure of generated images will be obstructed. Probably not good for SEO.
+            default: 0
         enable_captions:
             tab: General
             type: switch
@@ -50,8 +50,9 @@ tabs:
 #            tab: General
 #            type: partial
 #            path: $/Code200/imageking/controllers/cache/_clear_tmp_files.htm
-
-
+        clear_cache:
+            tab: General
+            type: Code200\ImageKing\Widgets\Cache
 
 
         # IMAGE RESIZE

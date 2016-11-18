@@ -13,6 +13,10 @@ When request is made plugin check for local images in response HTML. All found i
 ##Configuration
 Go to ***Settings*** -> ***System*** -> ***Image King*** and edit appropriate settings under all tabs.
 
+**Permissions**
+
+There is a special permission for accessing Code200 ImageKing. Check under System > Administrators > Manage Groups > Group "X" > Permissions > Code200 ImageKing
+
 ####Exclude certain image from processing
 You can define exclude class in settings. If you would use default _noProcess_ class then in your blog you could use
 ```
@@ -23,8 +27,8 @@ You can define exclude class in settings. If you would use default _noProcess_ c
 It is very likely that there will be bugs with some specific html markup. If you encounter such a bug, please report it.
 
 ##Future plans
-* <strike>only generate new image if it doesnt exist in temporary folder already</strike>
-* special button under settings allowing to purge temporary folder
+* <strike>only generate new image if it doesnt exist in temporary folder already</strike> - v1.1.0
+* <strike>special button under settings allowing to purge temporary folder</strike> - v1.1.2
 * generation of appropriate HTML on blog post save instead on client request
 * special button under settings allowing to regenerate all HMTL from blog posts
 

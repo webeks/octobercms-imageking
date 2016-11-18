@@ -245,12 +245,12 @@ class ImageManipulator extends Resizer
              $uploadsPath = base_path() . Config::get('cms.storage.uploads.path', '/storage/app/uploads');
              $mediaPath = base_path() . Config::get('cms.media.uploads.path', '/storage/app/media');
 
-            $relativePath = str_replace($uploadsPath, 'uploads', $folderPath);
+             $relativePath = str_replace($uploadsPath, 'uploads', $folderPath);
              $relativePath = str_replace($mediaPath, 'media', $relativePath);
 
             //we found a match either in uploads or media folder
             if ($relativePath != $folderPath) {
-                $path = temp_path($relativePath . "/");
+                $path = temp_path('public/' . $relativePath . "/");
             }
         }
 

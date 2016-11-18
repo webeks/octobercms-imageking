@@ -19,3 +19,4 @@ class Settings extends Model
         'watermark_img_small' => ['System\Models\File', 'public' => false]
     ];
 }
+

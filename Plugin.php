@@ -56,4 +56,15 @@ class Plugin extends PluginBase
         ];
     }
 
+
+    public function registerFormWidgets()
+    {
+        return [
+            'Code200\ImageKing\Widgets\Cache' => 'cache',
+//            'Backend\FormWidgets\RichEditor' => 'richeditor'
+        ];
+    }
+
+
+
 }

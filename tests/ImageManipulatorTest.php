@@ -86,11 +86,11 @@ class ImageManipulatorTest extends PluginTestCase
             return $imageManipulatorMock->getStoragePath();
         };
 
-        $this->assertEquals(temp_path("uploads/test.jpg"), $getStoragePath($testImageUploadsDir));
-        $this->assertEquals(temp_path("media/news/some-folder/test.jpg"), $getStoragePath($testImage1));
+        $this->assertEquals(temp_path("public/uploads/test.jpg"), $getStoragePath($testImageUploadsDir));
+        $this->assertEquals(temp_path("public/media/news/some-folder/test.jpg"), $getStoragePath($testImage1));
 
         Settings::set('private_paths_obstruction', true);
-        $this->assertNotEquals(temp_path("uploads/test.jpg"), $getStoragePath($testImageUploadsDir));
+        $this->assertNotEquals(temp_path("public/uploads/test.jpg"), $getStoragePath($testImageUploadsDir));
 
         Settings::set('private_paths_obstruction', $settingsValue);
     }

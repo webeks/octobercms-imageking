@@ -10,3 +10,5 @@
     - Cache -> dont process images if they already exist
 1.1.1:
     - permission added code200.imageking.modify_settings
+1.1.2:
+    - clear temporary assets cache button
