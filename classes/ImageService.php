@@ -261,7 +261,7 @@ class ImageService
                 $srcSetAttributes[] = sprintf('%s %sw', $image->getPublicUrl($newPath), $newSize);
 
             } else {
-                $srcSetAttributes[] = sprintf('%s %sw', $image->getPublicUrl($imagePath), $newSize);
+                $srcSetAttributes[] = sprintf('%s %sw', $image->getPublicUrl($newPath), $newSize);
             }
         }
 

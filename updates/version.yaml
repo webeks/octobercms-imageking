@@ -12,3 +12,5 @@
     - permission added code200.imageking.modify_settings
 1.1.2:
     - clear temporary assets cache button
+1.1.3:
+    - bug fix with cache
